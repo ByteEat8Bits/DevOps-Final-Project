@@ -1,8 +1,8 @@
 name: Fetch Stock Data
 
 on:
-  # schedule:
-  #   - cron: '0 10 * * *'  # 每天 UTC 0:00 執行
+  schedule:
+    - cron: '0 10 * * *'  # 每天 UTC 0:00 執行
   workflow_dispatch:      # 手動觸發
 
 jobs:
