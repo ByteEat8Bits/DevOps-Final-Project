@@ -1,1 +1,27 @@
+name: Auto Update
 
+on:
+  schedule:
+    - cron: "0 */12 * * *"  # 每 12 小時執行一次
+  workflow_dispatch:  # 允許手動觸發
+
+jobs:
+  run_yfinanceTest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2  # 檢出您的代碼
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'  # Python 版本
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # 如果有 requirements.txt 檔案，否則手動指定需求
+
+      - name: Run yfinanceTest.py
+        run: python yfinanceTest.py  # 執行您的 yfinanceTest.py
