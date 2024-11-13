@@ -61,15 +61,15 @@ jobs:
       - name: Commit and push changes if there are any
         if: steps.changes.outcome == 'failure'  # 只有在有變動時才執行
         run: |
-          echo "🚀 Committing and pushing changes..."
+          echo "🚀 Committing and pushing changes to output branch..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "Add output file from workflow"
-          git push
+          git commit -m "Add stock_data.csv from workflow"
+          git push origin HEAD:data-archive  # 將變更推送到 data-archive分支
           echo "✅ Changes pushed to repository successfully."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_ACTION_SECRET }}
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
       # 如果沒有變動，顯示沒有變動的訊息
       - name: No changes detected
         if: steps.changes.outcome == 'success'  # 只有在無變動時才執行
