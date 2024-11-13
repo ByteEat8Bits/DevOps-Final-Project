@@ -1,0 +1,76 @@
+name: Fetch Stock Data
+
+on:
+  schedule:
+    - cron: '0 10 * * *'  # 每天 UTC 0:00 執行
+  workflow_dispatch:      # 手動觸發
+
+jobs:
+  fetch-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        
+      - name: Notify checkout success
+        run: echo "✅ Repository checked out successfully."
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'  # 使用 Python 3.x 版本
+      - name: Notify Python setup success
+        run: echo "✅ Python environment set up successfully."
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Notify dependencies installation success
+        run: echo "✅ Dependencies installed successfully."
+
+      # Step 1: 執行資料抓取程式
+      - name: Run data fetch script
+        run: |
+          echo "🚀 Starting data fetch script..."
+          python fetch_data.py  # 假設這個腳本會生成 output.csv 檔案
+          echo "✅ Data fetch script executed successfully."
+
+      # Step 1.5: 將輸出檔案存為 Artifact
+      - name: Upload stock data as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: stock_data_artifact
+          path: stock_data.csv  # 替換為你的實際檔案名稱
+
+      - name: Notify upload stock data as artifact
+        run: echo "🗃️ stock_data.csv uploaded as artifact."
+
+      # Step 2: 判斷是否有變動
+      - name: Check for changes
+        id: changes
+        run: |
+          echo "🔍 Checking for changes in stock_data.csv file..."
+          git add stock_data.csv  # 實際檔案路徑
+          git diff --cached --exit-code || echo "📈 Changes detected in output file."
+          git diff --cached --exit-code
+        continue-on-error: true  # 讓此步驟不影響後續步驟
+
+      # Step 3: 若有變動則上傳
+      - name: Commit and push changes if there are any
+        if: steps.changes.outcome == 'failure'  # 只有在有變動時才執行
+        run: |
+          echo "🚀 Committing and pushing changes to output branch..."
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "Add stock_data.csv from workflow"
+          git push origin HEAD:data-archive  # 將變更推送到 data-archive分支
+          echo "✅ Changes pushed to repository successfully."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      # 如果沒有變動，顯示沒有變動的訊息
+      - name: No changes detected
+        if: steps.changes.outcome == 'success'  # 只有在無變動時才執行
+        run: echo "ℹ️ No changes detected in output file. Skipping commit and push."
