@@ -59,9 +59,13 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
+          echo "🔄 Switching to data-archive branch..."    #❗之後如果不用建立單獨分支放檔案，需要更改刪除
+          git fetch origin data-archive:data-archive  # 確保 data-archive 分支是最新的
+          git checkout data-archive
+          
           echo "🔍 Checking for changes in stock_data.csv file..."
-          git add stock_data.csv  # 實際檔案路徑
-          git diff --cached --exit-code || echo "📈 Changes detected in output file."
+          git add stock_data.csv  # 檢查 data-archive 分支的 stock_data.csv
+          git diff --cached --exit-code || echo "📈 Changes detected in stock_data.csv."
           git diff --cached --exit-code
         continue-on-error: true  # 讓此步驟不影響後續步驟
 
@@ -73,7 +77,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "Add stock_data.csv from workflow"
-          git push origin HEAD:data-archive  # 將變更推送到 data-archive分支
+          git push origin HEAD:data-archive  # 將變更推送到 data-archive分支 ❗之後如果不用建立單獨分支放檔案，需要更改
           echo "✅ Changes pushed to repository successfully."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
