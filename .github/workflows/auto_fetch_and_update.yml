@@ -55,19 +55,30 @@ jobs:
         with:
           name: stock_data_artifact
 
-      # Step 2: 判斷是否有變動
-      - name: Check for changes
+      # Step 2: 比較當前文件與 data-archive 分支上的文件
+      - name: Compare with data-archive branch
         id: changes
         run: |
-          echo "🔄 Switching to data-archive branch..."    #❗之後如果不用建立單獨分支放檔案，需要更改刪除
-          git fetch origin data-archive:data-archive  # 確保 data-archive 分支是最新的
+          echo "🔄 Preparing for branch switch and comparison..."
+
+          # 暫時將當前生成的文件備份
+          mv stock_data.csv new_stock_data.csv
+          
+          # 切換到 data-archive 分支
+          echo "🔄 Switching to data-archive branch..."
+          git fetch origin data-archive:data-archive
           git checkout data-archive
           
-          echo "🔍 Checking for changes in stock_data.csv file..."
-          git add stock_data.csv  # 檢查 data-archive 分支的 stock_data.csv
-          git diff --cached --exit-code || echo "📈 Changes detected in stock_data.csv."
-          git diff --cached --exit-code
-        continue-on-error: true  # 讓此步驟不影響後續步驟
+          # 比較新生成的文件和 data-archive 中的文件
+          echo "🔍 Comparing new_stock_data.csv with data-archive branch stock_data.csv..."
+          if ! diff -q new_stock_data.csv stock_data.csv; then
+            echo "📈 Changes detected, preparing to update data-archive branch."
+            mv new_stock_data.csv stock_data.csv  # 替換舊文件
+            git add stock_data.csv
+          else
+            echo "ℹ️ No changes detected, skipping update."
+            exit 0  # 無變動，退出步驟
+          fi
 
       # Step 3: 若有變動則上傳
       - name: Commit and push changes if there are any
