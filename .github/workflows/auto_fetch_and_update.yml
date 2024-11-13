@@ -76,6 +76,7 @@ jobs:
           echo "🚀 Committing and pushing changes to data-archive branch..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add stock_data.csv  # 添加文件並提交
           git commit -m "Add stock_data.csv from workflow"
           git push origin HEAD:data-archive  # 將變更推送到 data-archive分支 ❗之後如果不用建立單獨分支放檔案，需要更改
           echo "✅ Changes pushed to repository successfully."
