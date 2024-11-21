@@ -41,8 +41,8 @@ jobs:
           name: stock_data_artifact
           path: stock_data.csv  # 替換為你的實際檔案名稱
 
-  # Job 2: 判斷是否有變動，並推送到 data-archive 分支
-  check-and-push:
+  # Job 2: 推送到 data-archive 分支
+  push:
     runs-on: ubuntu-latest
     needs: fetch-data  # 依賴 fetch-data 工作，確保只有在抓取數據成功時才執行
 
@@ -55,46 +55,17 @@ jobs:
         with:
           name: stock_data_artifact
 
-      # Step 2: 比較當前文件與 data-archive 分支上的文件
-      - name: Compare with data-archive branch
-        id: changes
+      - name: Commit and push data to branch
         run: |
-          echo "🔄 Preparing for branch switch and comparison..."
-
-          # 暫時將當前生成的文件備份
-          mv stock_data.csv new_stock_data.csv
-          
-          # 切換到 data-archive 分支
-          echo "🔄 Switching to data-archive branch..."
+          echo "🚀 Committing and pushing changes to branch..."
           git fetch origin data-archive:data-archive
           git checkout data-archive
-          
-          # 比較新生成的文件和 data-archive 中的文件
-          echo "🔍 Comparing new_stock_data.csv with data-archive branch stock_data.csv..."
-          if ! diff -q new_stock_data.csv stock_data.csv; then
-            echo "📈 Changes detected, preparing to update data-archive branch."
-            mv new_stock_data.csv stock_data.csv  # 替換舊文件
-            git add stock_data.csv
-          else
-            echo "ℹ️ No changes detected, skipping update."
-            exit 0  # 無變動，退出步驟
-          fi
-
-      # Step 3: 若有變動則上傳
-      - name: Commit and push changes if there are any
-        if: steps.changes.outcome == 'failure'  # 只有在有變動時才執行
-        run: |
-          echo "🚀 Committing and pushing changes to data-archive branch..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add stock_data.csv  # 添加文件並提交
-          git commit -m "Add stock_data.csv from workflow"
+          git commit -m "Updated stock_data.csv from workflow"
           git push origin HEAD:data-archive  # 將變更推送到 data-archive分支 ❗之後如果不用建立單獨分支放檔案，需要更改
           echo "✅ Changes pushed to repository successfully."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
-      # 如果沒有變動，顯示沒有變動的訊息
-      - name: No changes detected
-        if: steps.changes.outcome == 'success'  # 只有在無變動時才執行
-        run: echo "ℹ️ No changes detected in output file. Skipping commit and push."
