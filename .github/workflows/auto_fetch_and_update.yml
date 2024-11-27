@@ -7,7 +7,7 @@ on:
 
 jobs:
   # Job 1: 抓取數據並產生 Artifact
-  fetch-data:
+  fetchData_and_cleanData:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,44 +31,60 @@ jobs:
       - name: Run data fetch script
         run: |
           echo "🚀 Starting data fetch script..."
-          python fetch_data.py  # 假設這個腳本會生成 stock_data.csv 檔案
+          python fetch_data.py  # 這個python檔會生成 stock_data.csv 檔案
           echo "✅ Data fetch script executed successfully."
 
-      # Step 1.5: 將輸出檔案存為 Artifact
+      # Step 2: 執行 data_clean.py 程式處理抓取到的數據
+      - name: Run data clean script
+        run: |
+          echo "🚀 Starting data clean script..."
+          python data_clean.py  # data_clean.py 會處理 stock_data.csv 並輸出多個股票的csv
+          echo "✅ Data clean script executed successfully."
+
+      # Step 3: 上傳所有 CSV 檔案作為 Artifact
       - name: Upload stock data as artifact
         uses: actions/upload-artifact@v3
         with:
-          name: stock_data_artifact
-          path: stock_data.csv  # 替換為你的實際檔案名稱
+          name: data_artifact
+          path: "*.csv"  # 使用通配符將所有 CSV 檔案上傳
 
-  # Job 2: 推送到 data-archive 分支
+  # Job 2: 推送到 gh-pagese 分支
   push:
     runs-on: ubuntu-latest
-    needs: fetch-data  # 依賴 fetch-data 工作，確保只有在抓取數據成功時才執行
+    needs: fetchData_and_cleanData  # 依賴第一個工作，確保只有在抓取和清理成功時才執行
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Switch to data-archive branch  # 將變更推送到 data-archive分支 ❗之後如果不用建立單獨分支放檔案，需要更改
+      - name: Switch to gh-pages branch  # 將變更推送到 gh-pages 分支 ❗(之後如果不用單獨分支放檔案，需更改)
         run: |
-          git fetch origin data-archive:data-archive
-          git checkout data-archive
+          git fetch origin gh-pages:gh-pages
+          git checkout gh-pages
           
       - name: Download stock data artifact
         uses: actions/download-artifact@v3
         with:
-          name: stock_data_artifact
-
+          name: data_artifact
+      
+      # 排除 stock_data.csv，並只推送其他 CSV 檔案
       - name: Commit and push data to branch
         run: |
           echo "🚀 Committing and pushing changes to branch..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add stock_data.csv  # 添加文件並提交
-          git commit -m "Updated stock_data.csv from workflow"
+
+          # 創建資料夾（如果不存在）
+          mkdir -p data  # 'data' 資料夾會被創建，如果已經存在則不會做任何事
+
+          # 排除 stock_data.csv，並將其他 CSV 檔案移動到 'data' 資料夾
+          for file in $(find . -name "*.csv" ! -name "stock_data.csv"); do
+            mv "$file" data/  # 移動檔案到 data 資料夾
+            git add "data/$file"  # 添加資料夾內的檔案到 Git
+          done
+
+          git commit -m "Updated CSV files from workflow"
           git push origin HEAD  
           echo "✅ Changes pushed to repository successfully."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
