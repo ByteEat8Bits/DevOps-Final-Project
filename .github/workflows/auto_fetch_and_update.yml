@@ -50,6 +50,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
+      - name: Switch to data-archive branch  # 將變更推送到 data-archive分支 ❗之後如果不用建立單獨分支放檔案，需要更改
+        run: |
+          git fetch origin data-archive:data-archive
+          git checkout data-archive
+          
       - name: Download stock data artifact
         uses: actions/download-artifact@v3
         with:
@@ -58,13 +63,11 @@ jobs:
       - name: Commit and push data to branch
         run: |
           echo "🚀 Committing and pushing changes to branch..."
-          git fetch origin data-archive:data-archive
-          git checkout data-archive
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add stock_data.csv  # 添加文件並提交
           git commit -m "Updated stock_data.csv from workflow"
-          git push origin HEAD:data-archive  # 將變更推送到 data-archive分支 ❗之後如果不用建立單獨分支放檔案，需要更改
+          git push origin HEAD  
           echo "✅ Changes pushed to repository successfully."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
