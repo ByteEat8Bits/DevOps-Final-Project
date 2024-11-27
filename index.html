@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票自動化分析平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 搜尋區 -->
+        <header class="search-section">
+            <h1>股票自動化分析平台</h1>
+            <div class="search-bar">
+                <input type="text" id="stock-input" placeholder="輸入股票代碼或名稱">
+                <button id="search-button">搜尋</button>
+            </div>
+            <p id="current-date"></p> <!-- 新增日期顯示 -->
+        </header>
+
+        <!-- 靜態指標區 -->
+        <section id="key-indicators" class="data-box">
+            <h2>靜態指標</h2>
+            <div class="indicator-card">
+                <h3>最新價格</h3>
+                <p id="latest-price">--</p>
+            </div>
+            <div class="indicator-card">
+                <h3>開盤價</h3>
+                <p id="open-price">--</p>
+            </div>
+            <div class="indicator-card">
+                <h3>最高價</h3>
+                <p id="high-price">--</p>
+            </div>
+            <div class="indicator-card">
+                <h3>最低價</h3>
+                <p id="low-price">--</p>
+            </div>
+        </section>
+
+        <!-- 圖表展示區 -->
+        <section id="charts" class="data-box">
+            <h2>圖表展示</h2>
+            <div class="tabs">
+                <button class="tab-button active" data-tab="price-trend">價格趨勢</button>
+                <button class="tab-button" data-tab="volume-trend">成交量趨勢</button>
+                <button class="tab-button" data-tab="kline-chart">K 線圖</button>
+            </div>
+            <div class="tab-content">
+                <div id="price-trend" class="tab active">
+                    <canvas id="price-chart"></canvas>
+                </div>
+                <div id="volume-trend" class="tab">
+                    <canvas id="volume-chart"></canvas>
+                </div>
+                <div id="kline-chart" class="tab">
+                    <canvas id="kline-canvas"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
