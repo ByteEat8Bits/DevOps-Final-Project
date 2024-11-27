@@ -74,9 +74,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # 排除 stock_data.csv，只推送其他 CSV 檔案
+          # 創建資料夾（如果不存在）
+          mkdir -p data  # 'data' 資料夾會被創建，如果已經存在則不會做任何事
+
+          # 排除 stock_data.csv，並將其他 CSV 檔案移動到 'data' 資料夾
           for file in $(find . -name "*.csv" ! -name "stock_data.csv"); do
-            git add "$file"  # 添加每個檔案
+            mv "$file" data/  # 移動檔案到 data 資料夾
+            git add "data/$file"  # 添加資料夾內的檔案到 Git
           done
 
           git commit -m "Updated CSV files from workflow"
