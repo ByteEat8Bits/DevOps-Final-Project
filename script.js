@@ -4,12 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchButton = document.getElementById('search-button');
     const stockDropdown = document.createElement('select'); // 股票清單下拉選單
     const currentDate = document.getElementById('current-date');
-    const openPrice = document.getElementById('open-price'); // 開盤價（原最新價格）
-    const closePrice = document.getElementById('close-price'); // 收盤價（原開盤價）
+    const openPrice = document.getElementById('open-price'); // 開盤價
+    const closePrice = document.getElementById('close-price'); // 收盤價
     const highPrice = document.getElementById('high-price'); // 最高價
     const lowPrice = document.getElementById('low-price'); // 最低價
     const priceChartCanvas = document.getElementById('price-chart');
     const volumeChartCanvas = document.getElementById('volume-chart');
+    const tabs = document.querySelectorAll('.tab-button'); // 按鈕選項
+    const tabContents = document.querySelectorAll('.tab'); // 圖表內容區塊
 
     // 初始化日期
     const today = new Date();
@@ -66,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: [],
                 datasets: [{
-                    label: '成交量',
+                    label: '成交量趨勢',
                     data: [],
                     backgroundColor: '#e74c3c'
                 }]
@@ -83,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initCharts();
 
-    // 四捨五入到小數點後兩位
+    // 價格四捨五入到小數點後兩位
     function roundToTwo(num) {
         return Math.round((num + Number.EPSILON) * 100) / 100;
     }
@@ -119,10 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 獲取最新的股票數據
                 const latestData = filteredStockData[filteredStockData.length - 1]; // 最下面的一行數據
                 const latestDate = latestData[0]; // 日期欄位
-                const openPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 12])) || '--'; // 開盤價
-                const closePriceValue = roundToTwo(parseFloat(latestData[stockIndex + 3])) || '--'; // 收盤價
-                const highPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 6])) || '--'; // 最高價
-                const lowPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 9])) || '--'; // 最低價
+                const openPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 12])) || '--'; // 開盤價(index = 4*資料集中的股票數量3)
+                const closePriceValue = roundToTwo(parseFloat(latestData[stockIndex + 3])) || '--'; // 收盤價(index = 1*3)
+                const highPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 6])) || '--'; // 最高價(index = 2*3)
+                const lowPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 9])) || '--'; // 最低價(index = 3*3)
 
                 // 更新靜態指標
                 openPrice.textContent = openPriceValue; // 開盤價
@@ -133,7 +135,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 更新圖表數據
                 const timestamps = filteredStockData.map(row => row[0].split(' ')[0]); // 日期 (去掉時間)
                 const prices = filteredStockData.map(row => roundToTwo(parseFloat(row[stockIndex]))); // 選中股票價格
-                updateCharts(timestamps, prices);
+                const volumes = filteredStockData.map(row => parseInt(row[stockIndex + 15], 10)); // 成交量(index = 3*5)
+                updateCharts(timestamps, prices, volumes);
             })
             .catch(error => {
                 console.error('抓取股票資料失敗', error);
@@ -141,13 +144,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 更新圖表數據
-    function updateCharts(timestamps, prices) {
+    function updateCharts(timestamps, prices, volumes) {
         priceChart.data.labels = timestamps;
         priceChart.data.datasets[0].data = prices;
         priceChart.update();
 
         volumeChart.data.labels = timestamps;
-        volumeChart.data.datasets[0].data = prices.map(() => Math.random() * 10000); // 模擬成交量
+        volumeChart.data.datasets[0].data = volumes;
         volumeChart.update();
     }
 
@@ -173,6 +176,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('載入股票清單失敗', error);
             });
     }
+
+    // 切換按鈕邏輯
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+            // 移除所有按鈕和內容的活動狀態
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            // 激活當前按鈕和內容
+            tab.classList.add('active');
+            tabContents[index].classList.add('active');
+        });
+    });
 
     loadStockList();
 });
