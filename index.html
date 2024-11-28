@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -57,7 +58,7 @@
                     <canvas id="volume-chart"></canvas>
                 </div>
                 <div id="kline-chart" class="tab">
-                    <canvas id="kline-canvas"></canvas>
+                    <svg id="kline-svg" width="800" height="400"></svg> <!-- 使用 SVG 來繪製 K 線圖 -->
                 </div>
             </div>
         </section>

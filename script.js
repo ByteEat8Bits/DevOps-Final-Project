@@ -121,10 +121,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 獲取最新的股票數據
                 const latestData = filteredStockData[filteredStockData.length - 1]; // 最下面的一行數據
                 const latestDate = latestData[0]; // 日期欄位
-                const openPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 12])) || '--'; // 開盤價(index = 4*資料集中的股票數量3)
-                const closePriceValue = roundToTwo(parseFloat(latestData[stockIndex + 3])) || '--'; // 收盤價(index = 1*3)
-                const highPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 6])) || '--'; // 最高價(index = 2*3)
-                const lowPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 9])) || '--'; // 最低價(index = 3*3)
+                const openPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 12])) || '--'; // 開盤價
+                const closePriceValue = roundToTwo(parseFloat(latestData[stockIndex + 3])) || '--'; // 收盤價
+                const highPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 6])) || '--'; // 最高價
+                const lowPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 9])) || '--'; // 最低價
 
                 // 更新靜態指標
                 openPrice.textContent = openPriceValue; // 開盤價
@@ -135,8 +135,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 更新圖表數據
                 const timestamps = filteredStockData.map(row => row[0].split(' ')[0]); // 日期 (去掉時間)
                 const prices = filteredStockData.map(row => roundToTwo(parseFloat(row[stockIndex]))); // 選中股票價格
-                const volumes = filteredStockData.map(row => parseInt(row[stockIndex + 15], 10)); // 成交量(index = 3*5)
+                const volumes = filteredStockData.map(row => parseInt(row[stockIndex + 15], 10)); // 成交量
+
                 updateCharts(timestamps, prices, volumes);
+
+                // 在 fetchStockData 中獲取 K 線圖數據
+                const klineData = filteredStockData.map(row => ({
+                    t: row[0], // 日期
+                    o: roundToTwo(parseFloat(row[stockIndex + 12])), // 開盤價
+                    h: roundToTwo(parseFloat(row[stockIndex + 6])), // 最高價
+                    l: roundToTwo(parseFloat(row[stockIndex + 9])), // 最低價
+                    c: roundToTwo(parseFloat(row[stockIndex + 3]))  // 收盤價
+                }));
+
+                // 繪製 K 線圖
+                drawKLineChart(klineData);
             })
             .catch(error => {
                 console.error('抓取股票資料失敗', error);
@@ -191,4 +204,83 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     loadStockList();
+
+    function drawKLineChart(data) {
+        const svg = d3.select("#kline-svg");
+        svg.selectAll("*").remove(); // 清空 SVG
+    
+        const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+        const width = +svg.attr("width") - margin.left - margin.right;
+        const height = +svg.attr("height") - margin.top - margin.bottom;
+    
+        const x = d3.scaleBand().range([0, width]).padding(0.1);
+        const y = d3.scaleLinear().range([height, 0]);
+    
+        const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    
+        // 格式化數據
+        data.forEach(d => {
+            d.date = new Date(d.t);
+            d.open = +d.o;
+            d.high = +d.h;
+            d.low = +d.l;
+            d.close = +d.c;
+        });
+    
+        x.domain(data.map(d => d.date));
+        y.domain([d3.min(data, d => d.low), d3.max(data, d => d.high)]);
+    
+        // 添加縮放功能
+        const zoom = d3.zoom()
+            .scaleExtent([1, 5]) // 縮放比例範圍
+            .translateExtent([[0, 0], [width, height]]) // 限制平移範圍
+            .on("zoom", zoomed);
+    
+        svg.call(zoom);
+    
+        // 繪製 K 線
+        const candles = g.selectAll(".candle")
+            .data(data)
+            .enter().append("line")
+            .attr("class", "candle")
+            .attr("x1", d => x(d.date) + x.bandwidth() / 2)
+            .attr("x2", d => x(d.date) + x.bandwidth() / 2)
+            .attr("y1", d => y(d.high))
+            .attr("y2", d => y(d.low))
+            .attr("stroke", "black");
+    
+        const bodies = g.selectAll(".body")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", "body")
+            .attr("x", d => x(d.date))
+            .attr("y", d => y(Math.max(d.open, d.close)))
+            .attr("height", d => Math.abs(y(d.open) - y(d.close)))
+            .attr("width", x.bandwidth())
+            .attr("fill", d => d.open > d.close ? "red" : "green");
+    
+        // // 添加 X 軸
+        // const xAxis = g.append("g")
+        //     .attr("transform", `translate(0, ${height})`)
+        //     .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
+    
+        // 添加 Y 軸
+        const yAxis = g.append("g").call(d3.axisLeft(y));
+    
+        // 定義縮放行為
+        function zoomed(event) {
+            const transform = event.transform;
+    
+            // 縮放 X 軸
+            const newX = transform.rescaleX(x);
+            xAxis.call(d3.axisBottom(newX).tickFormat(d3.timeFormat("%Y-%m-%d")));
+    
+            // 更新 K 線位置
+            candles.attr("x1", d => newX(d.date) + newX.bandwidth() / 2)
+                .attr("x2", d => newX(d.date) + newX.bandwidth() / 2);
+            bodies.attr("x", d => newX(d.date))
+                .attr("width", newX.bandwidth());
+        }
+    }
+
 });
