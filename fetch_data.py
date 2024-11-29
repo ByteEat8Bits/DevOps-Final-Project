@@ -25,15 +25,15 @@ today = datetime.today().strftime('%Y-%m-%d')
 for i, batch in enumerate(batches):
     try:
         print(f"Downloading batch {i+1}/{len(batches)}: {batch}")
-        data = yf.download(batch, start='2023-01-01', end=today, threads=True)
+        data = yf.download(batch, start='2024-01-01', end=today, threads=True, timeout= 30)
         valid_data = data.dropna(how='all', axis=1)  # 去除無效股票
         file_name = f"batch_{i+1}.csv"
         valid_data.to_csv(file_name)
         print(f"Batch {i+1} saved as {file_name}")
-        time.sleep(0.5)  # 每批次延遲 1 秒
+        time.sleep(2)  # 每批次延遲 2 秒
     except Exception as e:
         print(f"Failed to download batch {i+1} with error: {e}")
-        time.sleep(2)  # 錯誤時等待更長時間
+        time.sleep(4)  # 錯誤時等待更長時間
 
 
 
