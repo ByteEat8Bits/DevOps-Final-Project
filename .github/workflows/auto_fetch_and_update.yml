@@ -31,15 +31,15 @@ jobs:
       - name: Run data fetch script
         run: |
           echo "🚀 Starting data fetch script..."
-          python fetch_data.py  
+          python fetch_data.py  # 假設這個腳本會生成被切割下載的數個檔案
           echo "✅ Data fetch script executed successfully."
 
-      # # Step 2: 執行資料合併程式
-      # - name: Run data merge script
-      #   run: |
-      #     echo "🚀 Starting data merge script..."
-      #     python merge_data.py  # 假設這個腳本會生成被切割下載的數個檔案
-      #     echo "✅ Data merge script executed successfully."
+      # Step 2: 執行資料合併程式
+      - name: Run data merge script
+        run: |
+          echo "🚀 Starting data merge script..."
+          python merge_data.py  # 假設這個腳本會生成被切割下載的數個檔案
+          echo "✅ Data merge script executed successfully."
 
       # Step 3: 將輸出檔案存為 Artifact
       - name: Upload stock data as artifact
