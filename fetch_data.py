@@ -34,6 +34,7 @@ for batch in batches:
 
     except Exception as e:
         print(f"Failed to download batch: {batch} with error: {e}")
+        time.sleep(6)  # 錯誤時等待更長時間
 
 # 合併所有數據、儲存
 final_data = pd.concat(all_data, axis=1)
