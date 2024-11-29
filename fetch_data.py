@@ -30,7 +30,7 @@ for i, batch in enumerate(batches):
         file_name = f"batch_{i+1}.csv"
         valid_data.to_csv(file_name)
         print(f"Batch {i+1} saved as {file_name}")
-        time.sleep(2)  # 每批次延遲 4 秒
+        time.sleep(4)  # 每批次延遲 4 秒
     except Exception as e:
         print(f"Failed to download batch {i+1} with error: {e}")
         time.sleep(6)  # 錯誤時等待更長時間
