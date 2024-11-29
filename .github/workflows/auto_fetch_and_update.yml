@@ -31,7 +31,7 @@ jobs:
       - name: Run data fetch script
         run: |
           echo "🚀 Starting data fetch script..."
-          python fetch_data.py  # 假設這個腳本會生成被切割下載的數個檔案
+          python fetch_data.py  
           echo "✅ Data fetch script executed successfully."
 
       # Step 2: 執行資料合併程式
