@@ -20,9 +20,9 @@ batches = [stock_codes[i:i + batch_size] for i in range(0, len(stock_codes), bat
 
 # 獲取今天日期
 today = datetime.today().strftime('%Y-%m-%d')
-all_data = []
 
-for batch in batches:
+# 下載並保存成批的 CSV 檔案
+for i, batch in enumerate(batches):
     try:
         print(f"Downloading batch {i+1}/{len(batches)}: {batch}")
         data = yf.download(batch, start='2024-05-01', end=today, threads=True, timeout= 30)
