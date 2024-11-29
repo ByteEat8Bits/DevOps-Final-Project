@@ -29,8 +29,8 @@ for batch in batches:
         valid_data = data.dropna(how='all', axis=1)  # 去除無效股票
         all_data.append(valid_data)
 
-        # 下載一次後等待 0.5 秒
-        time.sleep(0.5)  
+        # 下載一次後等待 2 秒
+        time.sleep(2)  
 
     except Exception as e:
         print(f"Failed to download batch: {batch} with error: {e}")
