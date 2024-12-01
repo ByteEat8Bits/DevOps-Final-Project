@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 <body>
     <div class="container">
@@ -17,6 +18,7 @@
             <div class="search-bar">
                 <input type="text" id="stock-input" placeholder="輸入股票代碼或名稱">
                 <button id="search-button">搜尋</button>
+                <button id="addStock-button">新增股票</button>
             </div>
             <p id="current-date"></p> <!-- 新增日期顯示 -->
         </header>
@@ -57,10 +59,11 @@
                 <div id="volume-trend" class="tab">
                     <canvas id="volume-chart"></canvas>
                 </div>
-                <div id="kline-chart" class="tab">
-                    <svg id="kline-svg" width="800" height="400"></svg> <!-- 使用 SVG 來繪製 K 線圖 -->
-                </div>
-            </div>
+                <!-- <div id="kline-chart" class="tab">-->
+                    <!--canvas id="kline-svg"><canvas--> <!-- 使用 canvas 來繪製 K 線圖 -->
+                <!--/div> -->
+                <div id="chart" class="tab"></div>
+            </div> 
         </section>
     </div>
 

@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const volumeChartCanvas = document.getElementById('volume-chart');
     const tabs = document.querySelectorAll('.tab-button'); // 按鈕選項
     const tabContents = document.querySelectorAll('.tab'); // 圖表內容區塊
+    const addStockButton = document.getElementById('addStock-button');
 
     // 初始化日期
     const today = new Date();
@@ -35,6 +36,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const stockSymbol = stockInput.value.trim();
         if (stockSymbol) {
             fetchStockData(stockSymbol);
+        }
+    });
+
+    stockDropdown.innerHTML = '<option value="">已加入的股票</option>';
+    addStockButton.addEventListener('click', async () => {
+        const stockNum = stockInput.value.trim();
+        if (await checkStockInput(stockNum)) {
+            alert('已加入股票清單');
+            stockDropdown.innerHTML += `<option value="${stockNum}">${stockNum}</option>`;
+            stockInput.value = '';
+        } else {
+            alert('請輸入正確的股票代碼');
+            stockInput.value = '';
         }
     });
 
@@ -85,6 +99,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initCharts();
 
+    async function checkStockInput(stockNum) {
+        try {
+            const response = await fetch('stock_data.csv'); // 假設 CSV 文件放在 GitHub Pages 的根目錄
+            const data = await response.text();
+            const rows = data.split('\n');
+            
+            // 假設第一行為標題，從第二行開始檢查股票代碼
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i].split(',');
+                const stockIndex = row.indexOf(stockNum);
+                if (stockIndex !== -1 && stockNum.trim() !== '') {
+                    return true; // 找到股票代碼
+                }
+            }
+            return false; // 未找到股票代碼
+        } catch (error) {}
+    }
     // 價格四捨五入到小數點後兩位
     function roundToTwo(num) {
         return Math.round((num + Number.EPSILON) * 100) / 100;
@@ -121,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 獲取最新的股票數據
                 const latestData = filteredStockData[filteredStockData.length - 1]; // 最下面的一行數據
                 const latestDate = latestData[0]; // 日期欄位
-                const openPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 12])) || '--'; // 開盤價
+                const openPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 12])) || '--'; // 開盤價(4*amount)
                 const closePriceValue = roundToTwo(parseFloat(latestData[stockIndex + 3])) || '--'; // 收盤價
                 const highPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 6])) || '--'; // 最高價
                 const lowPriceValue = roundToTwo(parseFloat(latestData[stockIndex + 9])) || '--'; // 最低價
@@ -175,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const headerRow = rows[1].split(','); // 第二行為股票代碼
                 const uniqueSymbols = [...new Set(headerRow.slice(1).map(symbol => symbol.trim()))]; // 去除空白並過濾重複項目
 
-                stockDropdown.innerHTML = '<option value="">選擇股票</option>';
+                stockDropdown.innerHTML = '<option value="">已加入的股票</option>';
                 uniqueSymbols.forEach(symbol => {
                     if (symbol) { // 過濾空白值
                         const option = document.createElement('option');
@@ -203,84 +234,120 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    loadStockList();
+    // loadStockList();
+
+    // function drawKLineChart(data) {
+    //     const svg = d3.select("#kline-svg");
+    //     svg.selectAll("*").remove(); // 清空 SVG
+    
+    //     const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    //     const width = +svg.attr("width") - margin.left - margin.right;
+    //     const height = +svg.attr("height") - margin.top - margin.bottom;
+    
+    //     const x = d3.scaleBand().range([0, width]).padding(0.1);
+    //     const y = d3.scaleLinear().range([height, 0]);
+    
+    //     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    
+    //     // 格式化數據
+    //     data.forEach(d => {
+    //         d.date = new Date(d.t);
+    //         d.open = +d.o;
+    //         d.high = +d.h;
+    //         d.low = +d.l;
+    //         d.close = +d.c;
+    //     });
+    
+    //     x.domain(data.map(d => d.date));
+    //     y.domain([d3.min(data, d => d.low), d3.max(data, d => d.high)]);
+    
+    //     // 添加縮放功能
+    //     const zoom = d3.zoom()
+    //         .scaleExtent([1, 5]) // 縮放比例範圍
+    //         .translateExtent([[0, 0], [width, height]]) // 限制平移範圍
+    //         .on("zoom", zoomed);
+    
+    //     svg.call(zoom);
+    
+    //     // 繪製 K 線
+    //     const candles = g.selectAll(".candle")
+    //         .data(data)
+    //         .enter().append("line")
+    //         .attr("class", "candle")
+    //         .attr("x1", d => x(d.date) + x.bandwidth() / 2)
+    //         .attr("x2", d => x(d.date) + x.bandwidth() / 2)
+    //         .attr("y1", d => y(d.high))
+    //         .attr("y2", d => y(d.low))
+    //         .attr("stroke", "black");
+    
+    //     const bodies = g.selectAll(".body")
+    //         .data(data)
+    //         .enter().append("rect")
+    //         .attr("class", "body")
+    //         .attr("x", d => x(d.date))
+    //         .attr("y", d => y(Math.max(d.open, d.close)))
+    //         .attr("height", d => Math.abs(y(d.open) - y(d.close)))
+    //         .attr("width", x.bandwidth())
+    //         .attr("fill", d => d.open > d.close ? "red" : "green");
+    
+    //     // // 添加 X 軸
+    //     // const xAxis = g.append("g")
+    //     //     .attr("transform", `translate(0, ${height})`)
+    //     //     .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
+    
+    //     // 添加 Y 軸
+    //     const yAxis = g.append("g").call(d3.axisLeft(y));
+    
+    //     // 定義縮放行為
+    //     function zoomed(event) {
+    //         const transform = event.transform;
+    
+    //         // 縮放 X 軸
+    //         const newX = transform.rescaleX(x);
+    //         xAxis.call(d3.axisBottom(newX).tickFormat(d3.timeFormat("%Y-%m-%d")));
+    
+    //         // 更新 K 線位置
+    //         candles.attr("x1", d => newX(d.date) + newX.bandwidth() / 2)
+    //             .attr("x2", d => newX(d.date) + newX.bandwidth() / 2);
+    //         bodies.attr("x", d => newX(d.date))
+    //             .attr("width", newX.bandwidth());
+    //     }
+    // }
 
     function drawKLineChart(data) {
-        const svg = d3.select("#kline-svg");
-        svg.selectAll("*").remove(); // 清空 SVG
-    
-        const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-        const width = +svg.attr("width") - margin.left - margin.right;
-        const height = +svg.attr("height") - margin.top - margin.bottom;
-    
-        const x = d3.scaleBand().range([0, width]).padding(0.1);
-        const y = d3.scaleLinear().range([height, 0]);
-    
-        const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-    
-        // 格式化數據
-        data.forEach(d => {
-            d.date = new Date(d.t);
-            d.open = +d.o;
-            d.high = +d.h;
-            d.low = +d.l;
-            d.close = +d.c;
-        });
-    
-        x.domain(data.map(d => d.date));
-        y.domain([d3.min(data, d => d.low), d3.max(data, d => d.high)]);
-    
-        // 添加縮放功能
-        const zoom = d3.zoom()
-            .scaleExtent([1, 5]) // 縮放比例範圍
-            .translateExtent([[0, 0], [width, height]]) // 限制平移範圍
-            .on("zoom", zoomed);
-    
-        svg.call(zoom);
-    
-        // 繪製 K 線
-        const candles = g.selectAll(".candle")
-            .data(data)
-            .enter().append("line")
-            .attr("class", "candle")
-            .attr("x1", d => x(d.date) + x.bandwidth() / 2)
-            .attr("x2", d => x(d.date) + x.bandwidth() / 2)
-            .attr("y1", d => y(d.high))
-            .attr("y2", d => y(d.low))
-            .attr("stroke", "black");
-    
-        const bodies = g.selectAll(".body")
-            .data(data)
-            .enter().append("rect")
-            .attr("class", "body")
-            .attr("x", d => x(d.date))
-            .attr("y", d => y(Math.max(d.open, d.close)))
-            .attr("height", d => Math.abs(y(d.open) - y(d.close)))
-            .attr("width", x.bandwidth())
-            .attr("fill", d => d.open > d.close ? "red" : "green");
-    
-        // // 添加 X 軸
-        // const xAxis = g.append("g")
-        //     .attr("transform", `translate(0, ${height})`)
-        //     .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y-%m-%d")));
-    
-        // 添加 Y 軸
-        const yAxis = g.append("g").call(d3.axisLeft(y));
-    
-        // 定義縮放行為
-        function zoomed(event) {
-            const transform = event.transform;
-    
-            // 縮放 X 軸
-            const newX = transform.rescaleX(x);
-            xAxis.call(d3.axisBottom(newX).tickFormat(d3.timeFormat("%Y-%m-%d")));
-    
-            // 更新 K 線位置
-            candles.attr("x1", d => newX(d.date) + newX.bandwidth() / 2)
-                .attr("x2", d => newX(d.date) + newX.bandwidth() / 2);
-            bodies.attr("x", d => newX(d.date))
-                .attr("width", newX.bandwidth());
-        }
-    }
+        // 將數據格式化為 ApexCharts 所需的格式
 
+        const formattedKlineData = data.map(d => ({
+            x: new Date(d.t), // 日期
+            y: [d.o, d.h, d.l, d.c] // [開盤價, 最高價, 最低價, 收盤價]
+        }));
+        const options = {
+            series: [{
+                data: formattedKlineData
+            }],
+            chart: {
+                type: 'candlestick',
+                height: 350
+            },
+            title: {
+                text: 'CandleStick Chart',
+                align: 'left'
+            },
+            xaxis: {
+                type: 'datetime'
+            },
+            yaxis: {
+                tooltip: {
+                    enabled: true
+                }
+            }
+        };
+    
+        // 渲染 ApexCharts K 線圖
+        const chart = new ApexCharts(document.querySelector("#chart"), options);
+        chart.render();
+        chart.updateSeries([{
+            data: formattedKlineData
+        }]);
+    }
 });
