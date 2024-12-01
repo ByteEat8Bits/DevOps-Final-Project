@@ -334,10 +334,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 align: 'left'
             },
             xaxis: {
-                type: 'category',  // 使用 'category' 類型來去除日期間的空隙
+                type: 'category',
                 labels: {
                     formatter: function(val) {
-                    return new Date(val).toISOString().split('T')[0]; // 格式化日期顯示
+                        const date = new Date(val);
+                        return date.toLocaleDateString('zh-TW', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        });
                     }
                 }
             },
