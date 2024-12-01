@@ -334,7 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 align: 'left'
             },
             xaxis: {
-                type: 'datetime'
+                type: 'category',  // 使用 'category' 類型來去除日期間的空隙
+                labels: {
+                    formatter: function(val) {
+                    return new Date(val).toISOString().split('T')[0]; // 格式化日期顯示
+                    }
+                }
             },
             yaxis: {
                 tooltip: {
