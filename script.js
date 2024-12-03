@@ -42,7 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     stockDropdown.innerHTML = '<option value="">已加入的股票</option>';
     addStockButton.addEventListener('click', async () => {
         const stockNum = stockInput.value.trim();
-        if (stockDropdown.innerHTML.includes(stockNum)) {
+        if (stockNum === '') {
+            alert('請輸入正確的股票代碼');
+        } else if (stockDropdown.innerHTML.includes(stockNum)) {
             alert('股票清單已存在');
             stockInput.value = '';
         } else if (await checkStockInput(stockNum)) {
